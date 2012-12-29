@@ -1,0 +1,101 @@
+        #sudoku_controls{
+        	float: right;
+        	text-align: left;
+        	vertical-align: top;
+        	padding: 6px;
+        	margin: 6px;
+        }
+
+
+        #sudoku_block{
+        	display: inline-block;
+        }
+
+        #sudoku_board{
+            float: left;
+        	padding: 4px;
+        	margin: 4px;
+            width: 300px;
+            height: 300px;
+            border: thin double;
+        }
+        
+
+        #sudoku_board_solved{
+            float: left;
+        	padding: 4px;
+        	margin: 4px;
+            width: 300px;
+            height: 300px;
+            border: THICK double;
+		}
+
+        #sudoku_three{
+            float: left;
+            width: 92px;
+            height: 92px;
+			text-align: left;
+        	vertical-align: top;
+        	background: #ffffff;
+        	padding: 2px;
+        	margin: 2px;
+        }
+
+        #sudoku_one{
+            float: left;
+        	text-align: center;
+        	vertical-align: top;
+        	border: thin double;
+        	border-color: #cccccc;
+        	background: #ffffff;
+        	margin: 1px;
+        	padding: 1px;
+        	width: 24px;
+        	height: 24px;
+        }
+
+        #sudoku_one input {
+        	text-align: center;
+        	width: 24px;
+        	height: 24px;
+        	border: none;
+        	margin: 0;
+        	padding: 0;
+        }
+
+		#sudoku_dots {
+			width: 500px;
+		}
+
+        #sudoku_number {
+        	font-family: fixed,courier;
+        	font-size: 16px;
+        	text-align: center;
+        	vertical-align: top;
+        	background: #ffffff;
+        	color: #000000;
+        	width: 16px;
+        	height: 16px;
+        	border: none;
+        }
+        
+        #sudoku_hint {
+            background: #ccffcc;
+        	color: #000000;
+        }
+
+        #sudoku_error {
+            background: #ff0000;
+        	color: #ffff00;
+        }
+
+        #sudoku_ok {
+           	background: #ffffff;
+        	color: #000000;
+        }
+
+        #sudoku_guess {
+           	background: #ffff00;
+        	color: #000000;
+        }
+        
