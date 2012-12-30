@@ -1,9 +1,10 @@
 <div id="block">
     <h1>JavaScript Minesweeper</h1>
     <div id="mines_block">
-		<div id="mines_controls">
+		<div id="mines_controls" name="mines_controls">
 		</div>
-	    <div id="mines_board">    
+	    <div id="mines_board" name="mines_board">
+	    	Requires JavaScript    
 	    </div>
 	</div>
 </div>
@@ -17,12 +18,13 @@
         </ul>
     <h2>Ideas:</h2>
         <ul>
-        <li>Use canvas and ssvg like graphics to make the images. No PNG or GIf or JPG anywhere</li>
+        <li>Use canvas and svg like graphics to make the images. No PNG or GIf or JPG anywhere</li>
         <li>Make it touch friendly: No right click for flags.  Solve this UI problem...</li>
         </ul>
      <h2>Log:</h2>
         <h3>2012</h3>
         <ul>
+        <li>Dec 30: Canvas, Board and Mines now created.</li>
         <li>Dec 29: Create a GIT repo for the project code</li>
         </ul>
 </div>
