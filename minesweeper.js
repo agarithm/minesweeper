@@ -1,5 +1,4 @@
 
-var mines_debug=false;
 var mines_size = 64;
 var mines_x = 1;
 var mines_y = 1;
@@ -22,7 +21,6 @@ function Mine(x,y){
 }
 
 Mine.prototype.step = function(){
-	analytics.Log("Foot Detected "+this.x+" x "+this.y);
 	this.isSteppedOn = true;
 	this.paint();
 }
@@ -67,7 +65,6 @@ Mine.prototype.paint = function(){
 			if(mine.isMine){
 				drawBoom(mine);
 				if(!mines_board.dead){
-					analytics.Log("Boom!  Game Over");
 					mines_board.GameOver();
 				}
 			}else{
@@ -137,7 +134,7 @@ function BoardClick(event){
 	}
 	
 	//Check for Win
-	if(mines_board.Won()){
+	if(!mines_board.dead && mines_board.Won()){
 		mines_board.Message("Winner!");
 	}
 }
@@ -172,8 +169,6 @@ function StepOnNeighbours(x,y){
 	var i = 0; 
 	var j = 0;
 
-	analytics.Log("StepOnNeighbours(): "+x+" x "+y+" = "+mines_board.mine[x][y].neighbours);
-
 	for(i=-1;i<2;i++){
 		nX = x + i;
 		if(nX>=0 && nX<mines_x){
@@ -206,7 +201,6 @@ Board.prototype.UpdateNeighbours = function(MineX,MineY){
 				if(nY>=0 && nY<mines_y){
 					//Valid Y
 					this.mine[nX][nY].neighbours += 1;
-					analytics.Log("UpdateNeighbours(): "+nX+" x "+nY+" = "+this.mine[nX][nY].neighbours);
 				}
 			}
 		}
@@ -231,7 +225,6 @@ Board.prototype.LayMines = function(SafeX,SafeY){
 			this.mine[x][y].isMine = true;
 			mineCount -= 1;
 			//Let the neighbours know about it...
-			analytics.Log("LayMines(): "+x+" x "+y);
 			this.UpdateNeighbours(x,y);
 		}
 	}
@@ -272,7 +265,9 @@ Board.prototype.Message = function(msg){
 	var height = new Number();
 	
 	var step = mines_size/5;
-	
+
+	analytics.Log("Minesweeper = "+msg);
+
 	mines_ctx.clearRect(0,0,mines_x*mines_size,mines_y*mines_size);
 	
 	
