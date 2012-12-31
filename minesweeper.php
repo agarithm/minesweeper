@@ -25,6 +25,7 @@
      <h2>Log:</h2>
         <h3>2012</h3>
         <ul>
+        <li>Dec 31: Winner detection, and auto clear empty spaces.</li>
         <li>Dec 31: Basic game play is working. Needs better graphics, but the retro look works for me.  Going to leave it as is for now.</li>
         <li>Dec 31: Mouse Clicks, and Rendering state machine</li>
         <li>Dec 30: Canvas, Board and Mine objects created.</li>

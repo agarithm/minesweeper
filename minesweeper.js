@@ -130,6 +130,16 @@ function BoardClick(event){
 	if(!mines_board.dead){
 		mines_board.mine[x][y].step();
 	}
+	
+	//if no neighbours, step on all neighbours
+	if(mines_board.mine[x][y].neighbours==0){
+		StepOnNeighbours(x,y);
+	}
+	
+	//Check for Win
+	if(mines_board.Won()){
+		mines_board.Message("Winner!");
+	}
 }
 
 
@@ -154,6 +164,34 @@ function Board(){
 	//Add the listener
 	canvasNode = document.getElementById('mines_canvas');
 	canvasNode.addEventListener("mousedown", BoardClick, false);
+}
+
+function StepOnNeighbours(x,y){
+	var nX = 0;
+	var nY = 0;
+	var i = 0; 
+	var j = 0;
+
+	analytics.Log("StepOnNeighbours(): "+x+" x "+y+" = "+mines_board.mine[x][y].neighbours);
+
+	for(i=-1;i<2;i++){
+		nX = x + i;
+		if(nX>=0 && nX<mines_x){
+			//Valid x Index
+			for(j=-1;j<2;j++){
+				nY = y + j;
+				if(nY>=0 && nY<mines_y){
+					if(!mines_board.mine[nX][nY].isSteppedOn){
+						mines_board.mine[nX][nY].step()
+						//if no neighbours, step on all neighbours
+						if(mines_board.mine[nX][nY].neighbours==0){
+							StepOnNeighbours(nX,nY);
+						}						
+					}
+				}
+			}
+		}
+	}	
 }
 
 Board.prototype.UpdateNeighbours = function(MineX,MineY){
@@ -210,8 +248,22 @@ Board.prototype.Reveal = function(){
 	}	
 }
 
+Board.prototype.Won = function(){
+	for(i=0;i<mines_x;i++){
+		for(j=0;j<mines_y;j++){
+			if(!this.mine[i][j].isSteppedOn && !this.mine[i][j].isMine)return false;
+		}
+	}
+	return true;
+}
+
 
 Board.prototype.GameOver = function(){
+	this.Message("Boom!");
+}
+
+
+Board.prototype.Message = function(msg){
 	this.dead = true;
 	
 	var x = new Number();
@@ -243,14 +295,14 @@ Board.prototype.GameOver = function(){
 	var fontH = mines_size*2;
 	mines_ctx.font = fontH +"px Arial";
 	mines_ctx.textAlign = "center";
-	width = mines_ctx.measureText("Boom!").width + mines_size;
+	width = mines_ctx.measureText(msg).width + mines_size;
 	height = fontH + mines_size;
 	x = (mines_x*mines_size - width)/2;
 	y = (mines_y*mines_size - height)/2
 	mines_ctx.clearRect(x,y,width,height);
 	mines_ctx.strokeRect(x,y,width,height);
 	
-	mines_ctx.fillText("Boom!", mines_x*mines_size/2, mines_y*mines_size/2+(fontH/2));
+	mines_ctx.fillText(msg, mines_x*mines_size/2, mines_y*mines_size/2+(fontH/2));
 
 	
 	//boom clears in 2 seconds
