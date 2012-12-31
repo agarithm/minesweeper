@@ -180,25 +180,21 @@ Board.prototype.LayMines = function(SafeX,SafeY){
 	var mineCount = 0;
 	
 	cellCount = mines_x*mines_y;
-	mineCount = Math.floor(cellCount/12) + 1;
+	mineCount = Math.floor(cellCount/11) + 1;
 	
 	while(mineCount>0){
-	    //Lay Mines on the board
-		for(i=0;i<mines_x;i++){
-			for(j=0;j<mines_y;j++){
-				if(i==SafeX && j==SafeY)continue; //Never mine the place the person stepped on
-				
-				if(!(this.mine[i][j].isMine)){
-					//only lay mines on empty cells (randomly)
-					if(Math.floor((Math.random()*16)+1)<2){
-						this.mine[i][j].isMine = true;
-						mineCount -= 1;
-						//Let the neighbours know about it...
-						analytics.Log("LayMines(): "+i+" x "+j);
-						this.UpdateNeighbours(i,j);
-					}
-				}
-			}
+		x=Math.floor(Math.random()*mines_x);
+		y=Math.floor(Math.random()*mines_y);
+
+		if(x==SafeX || y==SafeY)continue;
+		
+		if(!(this.mine[x][y].isMine)){
+			//only lay mines on empty cells (randomly)
+			this.mine[x][y].isMine = true;
+			mineCount -= 1;
+			//Let the neighbours know about it...
+			analytics.Log("LayMines(): "+x+" x "+y);
+			this.UpdateNeighbours(x,y);
 		}
 	}
 	
