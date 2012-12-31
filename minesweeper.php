@@ -19,14 +19,14 @@
         </ul>
     <h2>Ideas:</h2>
         <ul>
-        <li>Use canvas and svg like graphics to make the images. No PNG or GIf or JPG anywhere</li>
+        <li>Use canvas graphics to make the images. No PNG or GIf or JPG anywhere</li>
         <li>Make it touch friendly: No right click for flags.  Solve this UI problem...</li>
         </ul>
      <h2>Log:</h2>
         <h3>2012</h3>
         <ul>
         <li>Dec 31: Winner detection, and auto clear empty spaces.</li>
-        <li>Dec 31: Basic game play is working. Needs better graphics, but the retro look works for me.  Going to leave it as is for now.</li>
+        <li>Dec 31: Basic game play is working. Needs better graphics, but the retro look works for me.</li>
         <li>Dec 31: Mouse Clicks, and Rendering state machine</li>
         <li>Dec 30: Canvas, Board and Mine objects created.</li>
         <li>Dec 29: Create a GIT repo for the project code</li>
