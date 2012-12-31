@@ -1,1 +1,1 @@
-Not much to see here yet.  I'll be back and update this when I know more.
+A very basic implementation.  Meant only as an exercise to explore basic HTML5 Canvas operations.
