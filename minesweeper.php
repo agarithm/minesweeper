@@ -24,7 +24,9 @@
      <h2>Log:</h2>
         <h3>2012</h3>
         <ul>
-        <li>Dec 30: Canvas, Board and Mines now created.</li>
+        <li>Dec 31: Basic game play is working.</li>
+        <li>Dec 31: Mouse Clicks, and Rendering state machine</li>
+        <li>Dec 30: Canvas, Board and Mine objects created.</li>
         <li>Dec 29: Create a GIT repo for the project code</li>
         </ul>
 </div>

@@ -17,16 +17,72 @@ function Mine(x,y){
 	this.x = x;
 	this.y = y;
 	this.isMine = false;
-	this.state = 0; //surrounding mines counter -1
-	
-	analytics.Log("New Mine "+this.x+" x "+this.y);
+	this.isSteppedOn = false;
+	this.neighbours = 0; //surrounding mines counter
 }
 
+Mine.prototype.step = function(){
+	analytics.Log("Foot Detected "+this.x+" x "+this.y);
+	this.isSteppedOn = true;
+	this.paint();
+}
 
 Mine.prototype.paint = function(){
+	/////////////////////////////////////////////////////////////
+	// Helpers
+
+	function clear(mine){
+		mines_ctx.clearRect(mine.x*mines_size,mine.y*mines_size,mines_size,mines_size);		
+	}
+	
+	function drawNoStep(mine){
+		mines_ctx.strokeRect(mine.x*mines_size+2,mine.y*mines_size+2,mines_size-4,mines_size-4);		
+	}
+	
+	function drawStep(mine){
+		
+		if(mine.neighbours>0){
+			//has some surrounding mines, paint the number
+			var fontH = mines_size/2;
+			mines_ctx.font = fontH +"px Arial";
+			mines_ctx.textAlign = "center";
+			mines_ctx.fillText(mine.neighbours, mine.x*mines_size+(mines_size/2), mine.y*mines_size+(mines_size/2)+(fontH/2));
+		}else{
+			//do nothing (leave it cleared)
+		}
+	}
+	
+	function drawBoom(mine){
+		var fontH = mines_size/2;
+		mines_ctx.font = fontH +"px Arial";
+		mines_ctx.textAlign = "center";
+		mines_ctx.fillText("M", mine.x*mines_size+(mines_size/2), mine.y*mines_size+(mines_size/2)+(fontH/2));
+		
+	}
+	
+	/////////////////////////////////////////////////////////////
+	// State Machine
+	function drawCurrentState(mine){
+		if(mine.isSteppedOn){
+			if(mine.isMine){
+				drawBoom(mine);
+				if(!mines_board.dead){
+					analytics.Log("Boom!  Game Over");
+					mines_board.GameOver();
+				}
+			}else{
+				drawStep(mine);
+			}
+		}else{
+			drawNoStep(mine);
+		}
+	}
+
+	/////////////////////////////////////////////////////////////
+	// Do it
 	if(mines_ctx!=null){
-		ctx = mines_ctx;
-		ctx.strokeRect(this.x*mines_size+2,this.y*mines_size+2,mines_size-4,mines_size-4);
+		clear(this);
+		drawCurrentState(this);
 	}else{
 		analytics.Log("Mine.paint() ERROR CTX = null ("+this.x+" x "+this.y+")");		
 	}
@@ -37,8 +93,49 @@ Mine.prototype.paint = function(){
 /////////////////////////////////////////////////////////////////
 //Board Objects 
 
+function BoardClick(event){
+	//CODE FROM STACK EXCHANGE: http://stackoverflow.com/a/9961416
+	
+	var totalOffsetX = 0;
+    var totalOffsetY = 0;
+    var canvasX = 0;
+    var canvasY = 0;
+    var x = 0;
+    var y = 0;
+    var currentElement = this;
+
+    do {
+        totalOffsetX += currentElement.offsetLeft;
+        totalOffsetY += currentElement.offsetTop;
+    }
+    while (currentElement = currentElement.offsetParent)
+
+    canvasX = event.pageX - totalOffsetX;
+    canvasY = event.pageY - totalOffsetY;
+
+    // Fix for variable canvas width
+    canvasX = Math.round( canvasX * (this.width / this.offsetWidth) );
+    canvasY = Math.round( canvasY * (this.height / this.offsetHeight) );
+
+    //Convert canvas xy to cell XY
+	x = Math.floor(canvasX/mines_size);
+	y = Math.floor(canvasY/mines_size);
+	
+	//if first step, mine the board around the first step...
+	if(!mines_board.mined){
+		mines_board.LayMines(x,y);
+	}
+	
+	//if not dead, fire the event at the mine.
+	if(!mines_board.dead){
+		mines_board.mine[x][y].step();
+	}
+}
+
+
 function Board(){
-    this.changed = false;
+    this.mined = false;
+    this.dead = false;
     this.mine = new Array(mines_x);
 
     //Create the board
@@ -53,6 +150,74 @@ function Board(){
 			this.mine[i][j].paint();
 		}
 	}
+
+	//Add the listener
+	canvasNode = document.getElementById('mines_canvas');
+	canvasNode.addEventListener("mousedown", BoardClick, false);
+}
+
+Board.prototype.UpdateNeighbours = function(MineX,MineY){
+	var nX = 0;
+	var nY = 0;
+	for(i=-1;i<2;i++){
+		nX = MineX + i;
+		if(nX>=0 && nX<mines_x){
+			//Valid x Index
+			for(j=-1;j<2;j++){
+				nY = MineY + j;
+				if(nY>=0 && nY<mines_y){
+					//Valid Y
+					this.mine[nX][nY].neighbours += 1;
+					analytics.Log("UpdateNeighbours(): "+nX+" x "+nY+" = "+this.mine[nX][nY].neighbours);
+				}
+			}
+		}
+	}
+}
+
+Board.prototype.LayMines = function(SafeX,SafeY){
+	var cellCount = 0;
+	var mineCount = 0;
+	
+	cellCount = mines_x*mines_y;
+	mineCount = Math.floor(cellCount/12) + 1;
+	
+	while(mineCount>0){
+	    //Lay Mines on the board
+		for(i=0;i<mines_x;i++){
+			for(j=0;j<mines_y;j++){
+				if(i==SafeX && j==SafeY)continue; //Never mine the place the person stepped on
+				
+				if(!(this.mine[i][j].isMine)){
+					//only lay mines on empty cells (randomly)
+					if(Math.floor((Math.random()*16)+1)<2){
+						this.mine[i][j].isMine = true;
+						mineCount -= 1;
+						//Let the neighbours know about it...
+						analytics.Log("LayMines(): "+i+" x "+j);
+						this.UpdateNeighbours(i,j);
+					}
+				}
+			}
+		}
+	}
+	
+	this.mined = true;
+}
+
+Board.prototype.Reveal = function(){
+	for(i=0;i<mines_x;i++){
+		for(j=0;j<mines_y;j++){
+			this.mine[i][j].isSteppedOn = true;
+			this.mine[i][j].paint();
+		}
+	}	
+}
+
+
+Board.prototype.GameOver = function(){
+	this.dead = true;
+	window.setTimeout(function(){mines_board.Reveal()},2000);
 }
 
 
@@ -62,16 +227,14 @@ function Board(){
 /////////////////////////////////////////////////////////////////
 //Setup 
 
+
 function MakeCanvas(){//returns true if successfull and supported
 	//Make the canvas fit the window
 	boardHTML = '<canvas id="mines_canvas" name="mines_canvas">ERROR: Your browser does not support canvas.  </canvas>';
 	UpdateDiv("mines_board",boardHTML);
-		
-	
+
 	//Size the board properly...
 	canvasNode = document.getElementById('mines_canvas');
-	fullheight = browserHeight();
-
 	//Check for Canvas support...
 	if (canvasNode.getContext){
 		 mines_ctx = canvasNode.getContext('2d');
@@ -80,7 +243,8 @@ function MakeCanvas(){//returns true if successfull and supported
 		return false;
 	}
 
-	
+	fullheight = browserHeight();
+
 	cw = mines_size * (Math.floor(canvasNode.parentNode.clientWidth/mines_size));
 	ch = mines_size * (Math.floor((fullheight * 0.618)/mines_size));
 	
@@ -92,18 +256,9 @@ function MakeCanvas(){//returns true if successfull and supported
 	mines_y = ch / mines_size;
 
 	analytics.Log("MakeCanvas(): Canvas = "+cw+" x "+ch);
-
 	return true;
 }
 
-
-
-
-function DrawMineField(){
-	analytics.Log("DrawMineField(): Board = "+mines_x+" x "+mines_y);
-	
-	mines_board = new Board();
-}
 
 
 
@@ -112,7 +267,7 @@ function MinesReady(){
 	
 	if(MakeCanvas()){
 		//Only draw if the canvas is created succesfully
-		DrawMineField();
+		mines_board = new Board();
 	}
 
 	analytics.Log("MinesReady(): END");
