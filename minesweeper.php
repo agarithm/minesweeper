@@ -11,6 +11,7 @@
 <div id="block">
     <h1>The JavaScript Minesweeper Story</h1>
     <h2>Goal</h2>
+    It's pretty straight forward: Get my hands dirty playing with Canvas and rendering with HTML5.
     <h2>Resources</h2>
         <ul>
             <li><a href="http://www.chezpoor.com/minesweeper/minesweeper.html" target="new" >A near perfect replication of the MS version of the game.</a></li> 
@@ -24,7 +25,7 @@
      <h2>Log:</h2>
         <h3>2012</h3>
         <ul>
-        <li>Dec 31: Basic game play is working. Needs better graphics.</li>
+        <li>Dec 31: Basic game play is working. Needs better graphics, but the retro look works for me.  Going to leave it as is for now.</li>
         <li>Dec 31: Mouse Clicks, and Rendering state machine</li>
         <li>Dec 30: Canvas, Board and Mine objects created.</li>
         <li>Dec 29: Create a GIT repo for the project code</li>

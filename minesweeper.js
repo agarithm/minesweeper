@@ -186,10 +186,10 @@ Board.prototype.LayMines = function(SafeX,SafeY){
 		x=Math.floor(Math.random()*mines_x);
 		y=Math.floor(Math.random()*mines_y);
 
-		if(x==SafeX || y==SafeY)continue;
+		if(x==SafeX || y==SafeY)continue; //don't put a mine under foot
 		
 		if(!(this.mine[x][y].isMine)){
-			//only lay mines on empty cells (randomly)
+			//only lay mines on empty cells
 			this.mine[x][y].isMine = true;
 			mineCount -= 1;
 			//Let the neighbours know about it...
@@ -213,7 +213,48 @@ Board.prototype.Reveal = function(){
 
 Board.prototype.GameOver = function(){
 	this.dead = true;
-	window.setTimeout(function(){mines_board.Reveal()},2000);
+	
+	var x = new Number();
+	var y = new Number();
+	var width = new Number();
+	var height = new Number();
+	
+	var step = mines_size/5;
+	
+	mines_ctx.clearRect(0,0,mines_x*mines_size,mines_y*mines_size);
+	
+	
+	x = y = step;
+	width = mines_x * mines_size - step - step;
+	height = mines_y * mines_size - step - step;
+
+	//Explode
+	while ((width>mines_size)&&(height>mines_size)){
+		mines_ctx.strokeRect(x,y,width,height);
+		x += step;
+		y += step;
+		width -= step*2;
+		height -= step*2;
+	}
+	
+	
+	
+	//Draw a Boom!
+	var fontH = mines_size*2;
+	mines_ctx.font = fontH +"px Arial";
+	mines_ctx.textAlign = "center";
+	width = mines_ctx.measureText("Boom!").width + mines_size;
+	height = fontH + mines_size;
+	x = (mines_x*mines_size - width)/2;
+	y = (mines_y*mines_size - height)/2
+	mines_ctx.clearRect(x,y,width,height);
+	mines_ctx.strokeRect(x,y,width,height);
+	
+	mines_ctx.fillText("Boom!", mines_x*mines_size/2, mines_y*mines_size/2+(fontH/2));
+
+	
+	//boom clears in 2 seconds
+	window.setTimeout(function(){mines_board.Reveal()},3500);
 }
 
 
