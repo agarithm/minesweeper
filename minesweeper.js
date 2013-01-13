@@ -1,5 +1,5 @@
 
-var mines_size = 64;
+var mines_size = 58;
 var mines_x = 1;
 var mines_y = 1;
 var mines_ctx = null;
@@ -17,12 +17,14 @@ function Mine(x,y){
 	this.y = y;
 	this.isMine = false;
 	this.isSteppedOn = false;
-	this.neighbours = 0; //surrounding mines counter
+	this.isClock = false;
+	this.neighbors = 0; //surrounding mines counter
 }
 
 Mine.prototype.step = function(){
 	this.isSteppedOn = true;
 	this.paint();
+	if(this.isMine)mines_board.GameOver();
 }
 
 Mine.prototype.paint = function(){
@@ -39,12 +41,12 @@ Mine.prototype.paint = function(){
 	
 	function drawStep(mine){
 		
-		if(mine.neighbours>0){
+		if(mine.neighbors>0){
 			//has some surrounding mines, paint the number
 			var fontH = mines_size/2;
 			mines_ctx.font = fontH +"px Arial";
 			mines_ctx.textAlign = "center";
-			mines_ctx.fillText(mine.neighbours, mine.x*mines_size+(mines_size/2), mine.y*mines_size+(mines_size/2)+(fontH/2));
+			mines_ctx.fillText(mine.neighbors, mine.x*mines_size+(mines_size/2), mine.y*mines_size+(mines_size/2)+(fontH/2));
 		}else{
 			//do nothing (leave it cleared)
 		}
@@ -54,19 +56,63 @@ Mine.prototype.paint = function(){
 		var fontH = mines_size/2;
 		mines_ctx.font = fontH +"px Arial";
 		mines_ctx.textAlign = "center";
-		mines_ctx.fillText("M", mine.x*mines_size+(mines_size/2), mine.y*mines_size+(mines_size/2)+(fontH/2));
+		//mines_ctx.fillText("M", mine.x*mines_size+(mines_size/2), mine.y*mines_size+(mines_size/2)+(fontH/2));
 		
+		//Circle
+		/*
+	      context.beginPath();
+	      context.arc(centerX, centerY, radius, 0, 2 * Math.PI, false);
+	      context.fillStyle = 'green';
+	      context.fill();
+	      context.lineWidth = 5;
+	      context.strokeStyle = '#003300';
+	      context.stroke();
+*/
+		cX = mine.x*mines_size+(mines_size/2);
+		cY = mine.y*mines_size+(mines_size/2);
+		
+		//Line End Points
+		x1 = -(mines_size*0.618/3);
+		x2 = (mines_size*0.618/3)*2;
+
+		for(var i = 0; i<4;i++){
+			mines_ctx.save();						
+
+			mines_ctx.lineWidth = 3;
+		    	
+			//Translate
+			mines_ctx.translate(cX,cY);
+
+			//rotate
+			mines_ctx.rotate(i*Math.PI/4);
+			
+			mines_ctx.beginPath();
+			mines_ctx.rect(x1,0,x2,0);
+			mines_ctx.stroke();
+			
+			mines_ctx.restore();		
+		}
+		
+		
+		
+		mines_ctx.beginPath();
+		mines_ctx.arc(cX, cY, mines_size/8, 0 , 2 * Math.PI, false);
+	    mines_ctx.fill();
+	    mines_ctx.stroke();
+
+	    
+	    
+
 	}
 	
 	/////////////////////////////////////////////////////////////
 	// State Machine
 	function drawCurrentState(mine){
-		if(mine.isSteppedOn){
+		if(mine.isClock){
+			//Do Nothing.
+		}else if(mine.isSteppedOn){
 			if(mine.isMine){
 				drawBoom(mine);
-				if(!mines_board.dead){
-					mines_board.GameOver();
-				}
 			}else{
 				drawStep(mine);
 			}
@@ -121,6 +167,8 @@ function BoardClick(event){
 	//if first step, mine the board around the first step...
 	if(!mines_board.mined){
 		mines_board.LayMines(x,y);
+		//Start the Clock
+		mines_board.clock = window.setInterval(function(){drawClock();},100);
 	}
 	
 	//if not dead, fire the event at the mine.
@@ -128,22 +176,49 @@ function BoardClick(event){
 		mines_board.mine[x][y].step();
 	}
 	
-	//if no neighbours, step on all neighbours
-	if(mines_board.mine[x][y].neighbours==0){
-		StepOnNeighbours(x,y);
+	//if no neighbors, step on all neighbors
+	if(mines_board.mine[x][y].neighbors==0){
+		StepOnNeighbors(x,y);
 	}
 	
 	//Check for Win
 	if(!mines_board.dead && mines_board.Won()){
-		mines_board.Message("Winner!");
+		mines_board.Message("Done!");
 	}
 }
+
+function drawClock(){
+	function AddNull(num) {
+		return ((num >= 0)&&(num < 10))?"0"+num:num+"";
+	}
+	
+	mines_board.currentSeconds -= 0.1;
+	if(mines_board.currentSeconds<0){
+		mines_board.TimeOver();
+	}else{
+		var minutes=parseInt(mines_board.currentSeconds/60);
+		var seconds=parseInt(mines_board.currentSeconds%60);
+		var strText = AddNull(minutes) + ":" + AddNull(seconds);
+
+		var fontH = mines_size/2;
+		mines_ctx.font = fontH +"px Arial";
+		mines_ctx.textAlign = "left";
+		mines_ctx.clearRect(0,0,mines_size*2,mines_size);		
+		mines_ctx.fillText(strText, (mines_size/4)+(fontH/4), (mines_size/2)+(fontH/2));		
+	}
+	
+	
+}
+
 
 
 function Board(){
     this.mined = false;
     this.dead = false;
     this.mine = new Array(mines_x);
+    
+    //5 seconds per mine, count down...
+    this.currentSeconds = (Math.floor(mines_x*mines_y/11) + 1)*5;
 
     //Create the board
     for(i=0;i<mines_x;i++){
@@ -154,6 +229,10 @@ function Board(){
 	for(i=0;i<mines_x;i++){
 		for(j=0;j<mines_y;j++){
 			this.mine[i][j] = new Mine(i,j);
+			if(i<2&&j==0){
+				this.mine[i][j].isClock=true;
+				this.mine[i][j].isSteppedOn=true;
+			}
 			this.mine[i][j].paint();
 		}
 	}
@@ -161,50 +240,54 @@ function Board(){
 	//Add the listener
 	canvasNode = document.getElementById('mines_canvas');
 	canvasNode.addEventListener("mousedown", BoardClick, false);
+	
+	
+	
+	//init Clock Timer
+	this.clock = null ;//window.setInterval(function(){drawClock();},100);
+	
 }
 
-function StepOnNeighbours(x,y){
-	var nX = 0;
-	var nY = 0;
+
+function DoWithNeighbors(func,cx,cy){ //center x, center y
+	var nx = 0;//neighbour x
+	var ny = 0;//neighbour y
 	var i = 0; 
 	var j = 0;
 
 	for(i=-1;i<2;i++){
-		nX = x + i;
-		if(nX>=0 && nX<mines_x){
+		nx = cx + i;
+		if(nx>=0 && nx<mines_x){
 			//Valid x Index
 			for(j=-1;j<2;j++){
-				nY = y + j;
-				if(nY>=0 && nY<mines_y){
-					if(!mines_board.mine[nX][nY].isSteppedOn){
-						mines_board.mine[nX][nY].step()
-						//if no neighbours, step on all neighbours
-						if(mines_board.mine[nX][nY].neighbours==0){
-							StepOnNeighbours(nX,nY);
-						}						
-					}
-				}
-			}
-		}
-	}	
-}
-
-Board.prototype.UpdateNeighbours = function(MineX,MineY){
-	var nX = 0;
-	var nY = 0;
-	for(i=-1;i<2;i++){
-		nX = MineX + i;
-		if(nX>=0 && nX<mines_x){
-			//Valid x Index
-			for(j=-1;j<2;j++){
-				nY = MineY + j;
-				if(nY>=0 && nY<mines_y){
-					//Valid Y
-					this.mine[nX][nY].neighbours += 1;
+				ny = cy + j;
+				if(ny>=0 && ny<mines_y){
+					//valid y index, so call func
+					func(nx,ny);
 				}
 			}
 		}
 	}
+}
+
+
+
+function StepOnNeighbors(sx,sy){
+	DoWithNeighbors(function(x,y){
+		if(!mines_board.mine[x][y].isSteppedOn){
+			mines_board.mine[x][y].step();
+			//if no neighbors, step on all neighbors
+			if(mines_board.mine[x][y].neighbors==0){
+				StepOnNeighbors(x,y);
+			}						
+		}		
+	},sx,sy)
+}
+
+Board.prototype.UpdateNeighbors = function(MineX,MineY){
+	DoWithNeighbors(function(x,y){
+						mines_board.mine[x][y].neighbors += 1;
+					},MineX,MineY);
 }
 
 Board.prototype.LayMines = function(SafeX,SafeY){
@@ -219,13 +302,15 @@ Board.prototype.LayMines = function(SafeX,SafeY){
 		y=Math.floor(Math.random()*mines_y);
 
 		if(x==SafeX || y==SafeY)continue; //don't put a mine under foot
+		if(x<2&&y==0)continue;//don't put mines under the Clock
+
 		
 		if(!(this.mine[x][y].isMine)){
 			//only lay mines on empty cells
 			this.mine[x][y].isMine = true;
 			mineCount -= 1;
-			//Let the neighbours know about it...
-			this.UpdateNeighbours(x,y);
+			//Let the neighbors know about it...
+			this.UpdateNeighbors(x,y);
 		}
 	}
 	
@@ -238,7 +323,8 @@ Board.prototype.Reveal = function(){
 			this.mine[i][j].isSteppedOn = true;
 			this.mine[i][j].paint();
 		}
-	}	
+	}
+	drawClock();
 }
 
 Board.prototype.Won = function(){
@@ -252,8 +338,17 @@ Board.prototype.Won = function(){
 
 
 Board.prototype.GameOver = function(){
-	this.Message("Boom!");
+	if(!this.dead){
+		this.Message("Boom!");
+	}
 }
+
+Board.prototype.TimeOver = function(){
+	if(!this.dead){
+		this.Message("Time!");
+	}
+}
+
 
 
 Board.prototype.Message = function(msg){
@@ -302,6 +397,7 @@ Board.prototype.Message = function(msg){
 	
 	//boom clears in 2 seconds
 	window.setTimeout(function(){mines_board.Reveal()},3500);
+	window.clearInterval(mines_board.clock);
 }
 
 
@@ -350,8 +446,9 @@ function MinesReady(){
 	analytics.Log("MinesReady(): START");
 	
 	if(MakeCanvas()){
-		//Only draw if the canvas is created succesfully
+		//Only draw if the canvas is created successfully
 		mines_board = new Board();
+		
 	}
 
 	analytics.Log("MinesReady(): END");
